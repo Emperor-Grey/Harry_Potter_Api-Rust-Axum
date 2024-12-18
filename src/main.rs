@@ -1,7 +1,9 @@
 use std::net::SocketAddr;
 
 use axum::{routing::get, Router};
-use handlers::{get_characters, get_characters_by_id};
+use handlers::{
+    create_character, delete_character, get_characters, get_characters_by_id, update_character,
+};
 use tokio::net::TcpListener;
 
 pub mod data;
@@ -14,8 +16,13 @@ pub mod utils;
 #[tokio::main]
 async fn main() {
     let app = Router::new()
-        .route("/characters", get(get_characters))
-        .route("/characters/:id", get(get_characters_by_id));
+        .route("/characters", get(get_characters).post(create_character))
+        .route(
+            "/characters/:id",
+            get(get_characters_by_id)
+                .put(update_character)
+                .delete(delete_character),
+        );
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let listener = TcpListener::bind(addr).await.unwrap();

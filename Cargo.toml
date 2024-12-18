@@ -16,7 +16,6 @@ tower-http = { version = "0.6.2", features = ["fs", "trace"] }
 
 # src/
 # ├── main.rs
-# ├── character.rs
 # ├── data.rs
 # ├── handlers/
 # │   ├── mod.rs
