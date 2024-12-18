@@ -17,7 +17,7 @@ pub fn get_character_by_id(id: u16) -> Result<Option<Character>, StatusCode> {
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
 
-    Ok(data.values().cloned().find(|c| c.id == id))
+    Ok(data.values().find(|&c| c.id == id).cloned())
 }
 
 pub fn create_new_character(character: Character) -> Result<(), StatusCode> {
