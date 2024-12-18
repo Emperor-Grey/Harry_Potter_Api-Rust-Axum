@@ -4,7 +4,9 @@ use axum::{routing::get, Router};
 use handlers::{
     create_character, delete_character, get_characters, get_characters_by_id, update_character,
 };
+use http::{HeaderValue, Method};
 use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
 
 pub mod data;
 
@@ -16,6 +18,11 @@ pub mod utils;
 #[tokio::main]
 async fn main() {
     let app = Router::new()
+        .layer(
+            CorsLayer::new()
+                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap())
+                .allow_methods([Method::GET]),
+        )
         .route("/characters", get(get_characters).post(create_character))
         .route(
             "/characters/:id",
