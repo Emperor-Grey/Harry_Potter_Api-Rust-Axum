@@ -1,7 +1,8 @@
 use axum::{routing::get, Router};
 use dotenv::dotenv;
 use handlers::{
-    create_character, delete_character, get_character_by_id, get_characters, update_character,
+    create_character, delete_all_characters, delete_character, get_character_by_id, get_characters,
+    update_character,
 };
 use http::Method;
 use std::env;
@@ -42,7 +43,12 @@ async fn main() {
             Method::POST,
             Method::DELETE,
         ]))
-        .route("/characters", get(get_characters).post(create_character))
+        .route(
+            "/characters",
+            get(get_characters)
+                .post(create_character)
+                .delete(delete_all_characters),
+        )
         .route(
             "/characters/:id",
             get(get_character_by_id)

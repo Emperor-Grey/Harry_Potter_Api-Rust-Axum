@@ -1,5 +1,4 @@
 use crate::models::character::{Character, CharacterPayload};
-use axum::extract::State;
 use http::StatusCode;
 use sqlx::MySqlPool;
 
@@ -12,9 +11,7 @@ use sqlx::MySqlPool;
 //     Ok(data.values().cloned().collect())
 // }
 
-pub async fn get_all_characters_from_db(
-    State(db): State<MySqlPool>,
-) -> Result<Vec<Character>, StatusCode> {
+pub async fn get_all_characters_from_db(db: MySqlPool) -> Result<Vec<Character>, StatusCode> {
     let query = Character::select().build();
 
     let characters = sqlx::query_as::<_, Character>(&query).fetch_all(&db).await;
@@ -37,10 +34,7 @@ pub async fn get_all_characters_from_db(
 //     Ok(data.values().find(|&c| c.id == id).cloned())
 // }
 
-pub async fn get_character_by_id_from_db(
-    State(db): State<MySqlPool>,
-    id: u16,
-) -> Result<Character, StatusCode> {
+pub async fn get_character_by_id_from_db(db: MySqlPool, id: u16) -> Result<Character, StatusCode> {
     let query = Character::select().where_id(id).build();
 
     let character = sqlx::query_as::<_, Character>(&query).fetch_one(&db).await;
@@ -69,7 +63,7 @@ pub async fn get_character_by_id_from_db(
 // }
 
 pub async fn create_new_character_in_db(
-    State(db): State<MySqlPool>,
+    db: MySqlPool,
     char: CharacterPayload,
 ) -> Result<StatusCode, StatusCode> {
     let query = Character::insert()
@@ -101,7 +95,7 @@ pub async fn create_new_character_in_db(
 // }
 
 pub async fn update_new_character_in_db(
-    State(db): State<MySqlPool>,
+    db: MySqlPool,
     update_character: CharacterPayload,
     id: u16,
 ) -> Result<StatusCode, StatusCode> {
@@ -139,7 +133,7 @@ pub async fn update_new_character_in_db(
 // }
 
 pub async fn delete_new_character_from_db(
-    State(db): State<MySqlPool>,
+    db: MySqlPool,
     id: u16,
 ) -> Result<StatusCode, StatusCode> {
     let query = Character::delete().delete_where_id_eq(id);
@@ -152,6 +146,18 @@ pub async fn delete_new_character_from_db(
 
         Err(err) => {
             tracing::error!("Database error during update: {:?}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
+    }
+}
+
+pub async fn delete_all_character_from_db(db: MySqlPool) -> Result<StatusCode, StatusCode> {
+    let query = "DELETE FROM characters";
+
+    match sqlx::query(query).execute(&db).await {
+        Ok(_d) => Ok(StatusCode::OK),
+        Err(err) => {
+            tracing::error!("Database error: {:?}", err);
             Err(StatusCode::INTERNAL_SERVER_ERROR)
         }
     }

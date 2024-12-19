@@ -13,7 +13,7 @@ use crate::{
         character_service::{
             delete_new_character_from_db, get_character_by_id_from_db, update_new_character_in_db,
         },
-        create_new_character_in_db, get_all_characters_from_db,
+        create_new_character_in_db, delete_all_character_from_db, get_all_characters_from_db,
     },
     utils::ApiResponse,
 };
@@ -21,7 +21,7 @@ use crate::{
 pub async fn get_characters(State(db): State<MySqlPool>) -> impl IntoResponse {
     tracing::info!("Fetching all characters");
 
-    match get_all_characters_from_db(State(db)).await {
+    match get_all_characters_from_db(db).await {
         Ok(characters) => Ok(ApiResponse {
             status: StatusCode::OK,
             data: characters,
@@ -45,7 +45,7 @@ pub async fn get_character_by_id(
     Path(id): Path<u16>,
 ) -> impl IntoResponse {
     tracing::info!("Fetching single character with ID: {}", id);
-    match get_character_by_id_from_db(State(db), id).await {
+    match get_character_by_id_from_db(db, id).await {
         Ok(char) => (StatusCode::OK, Json(char)).into_response(),
         Err(StatusCode::INTERNAL_SERVER_ERROR) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
         Err(_) => (
@@ -90,7 +90,7 @@ pub async fn create_character(
     Json(char): Json<CharacterPayload>,
 ) -> impl IntoResponse {
     tracing::info!("Creating a character {:?}", char);
-    match create_new_character_in_db(State(db), char).await {
+    match create_new_character_in_db(db, char).await {
         Ok(_s) => (
             StatusCode::CREATED,
             Json(json!({
@@ -151,7 +151,7 @@ pub async fn update_character(
     Json(update_char): Json<CharacterPayload>,
 ) -> impl IntoResponse {
     tracing::info!("Updating character with id: {}", id);
-    match update_new_character_in_db(State(db), update_char, id).await {
+    match update_new_character_in_db(db, update_char, id).await {
         Ok(_s) => (
             StatusCode::OK,
             Json(json!({
@@ -205,7 +205,7 @@ pub async fn delete_character(
     Path(id): Path<u16>,
 ) -> impl IntoResponse {
     tracing::info!("Deleting a character with ID: {}", id);
-    match delete_new_character_from_db(State(db), id).await {
+    match delete_new_character_from_db(db, id).await {
         Ok(_s) => (
             _s,
             Json(json!({
@@ -227,5 +227,26 @@ pub async fn delete_character(
             })),
         )
             .into_response(),
+    }
+}
+
+pub async fn delete_all_characters(State(db): State<MySqlPool>) -> impl IntoResponse {
+    tracing::info!("Deleting all characters");
+
+    match delete_all_character_from_db(db).await {
+        Ok(_s) => (
+            StatusCode::OK,
+            Json(json!({
+                "message":"Successfully deleted the entire database"
+            }))
+            .into_response(),
+        ),
+        Err(_s) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({
+                "message":"Deleting the entire database failed"
+            }))
+            .into_response(),
+        ),
     }
 }
