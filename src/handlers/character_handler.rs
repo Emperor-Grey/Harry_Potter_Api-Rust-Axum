@@ -4,16 +4,16 @@ use axum::{
     Json,
 };
 use http::StatusCode;
-use serde_json::{json, Value};
+use serde_json::json;
 use sqlx::MySqlPool;
 
 use crate::{
-    models::Character,
+    models::{character::CharacterPayload, Character},
     services::{
         character_service::{
             delete_new_character, get_character_by_id_from_db, update_new_character,
         },
-        create_new_character, get_all_characters_from_db,
+        create_new_character_in_db, get_all_characters_from_db,
     },
     utils::ApiResponse,
 };
@@ -47,15 +47,51 @@ pub async fn get_character_by_id(
     tracing::info!("Fetching single character with ID: {}", id);
     match get_character_by_id_from_db(State(db), id).await {
         Ok(char) => (StatusCode::OK, Json(char)).into_response(),
-        Err(StatusCode::NOT_FOUND) => StatusCode::NOT_FOUND.into_response(),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, Json(Value::Null)).into_response(),
+        Err(StatusCode::INTERNAL_SERVER_ERROR) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        Err(_) => (
+            StatusCode::NOT_FOUND,
+            Json(json!({
+                "message":"Character with that id,does not exist in our database"
+            })),
+        )
+            .into_response(),
     }
 }
 
-pub async fn create_character(Json(character): Json<Character>) -> impl IntoResponse {
-    tracing::info!("creating a character: {}", character);
-    match create_new_character(character) {
-        Ok(()) => (
+// pub async fn create_character(Json(character): Json<Character>) -> impl IntoResponse {
+//     tracing::info!("creating a character: {}", character);
+//     match create_new_character(character) {
+//         Ok(()) => (
+//             StatusCode::CREATED,
+//             Json(json!({
+//                 "message": "Character created successfully"
+//             })),
+//         )
+//             .into_response(),
+//         Err(StatusCode::CONFLICT) => (
+//             StatusCode::CONFLICT,
+//             Json(json!({
+//                 "message": "Character already exists"
+//             })),
+//         )
+//             .into_response(),
+//         Err(_) => (
+//             StatusCode::INTERNAL_SERVER_ERROR,
+//             Json(json!({
+//                 "message": "Internal server error"
+//             })),
+//         )
+//             .into_response(),
+//     }
+// }
+
+pub async fn create_character(
+    State(db): State<MySqlPool>,
+    Json(char): Json<CharacterPayload>,
+) -> impl IntoResponse {
+    tracing::info!("Creating a character {:?}", char);
+    match create_new_character_in_db(State(db), char).await {
+        Ok(_s) => (
             StatusCode::CREATED,
             Json(json!({
                 "message": "Character created successfully"

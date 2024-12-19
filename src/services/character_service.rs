@@ -1,5 +1,5 @@
 use crate::data::DATA;
-use crate::models::character::Character;
+use crate::models::character::{Character, CharacterPayload};
 use axum::extract::State;
 use http::StatusCode;
 use sqlx::MySqlPool;
@@ -55,18 +55,36 @@ pub async fn get_character_by_id_from_db(
     }
 }
 
-pub fn create_new_character(character: Character) -> Result<(), StatusCode> {
-    let mut data = match DATA.lock() {
-        Ok(data) => data,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
-    };
+// pub fn create_new_character(character: Character) -> Result<(), StatusCode> {
+//     let mut data = match DATA.lock() {
+//         Ok(data) => data,
+//         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+//     };
 
-    if data.contains_key(&character.id) {
-        return Err(StatusCode::CONFLICT);
+//     if data.contains_key(&character.id) {
+//         return Err(StatusCode::CONFLICT);
+//     }
+
+//     data.insert(character.id, character);
+//     Ok(())
+// }
+
+pub async fn create_new_character_in_db(
+    State(db): State<MySqlPool>,
+    char: CharacterPayload,
+) -> Result<StatusCode, StatusCode> {
+    let query = Character::insert()
+        .insert_to_actor_name(char.actor_name)
+        .insert_to_name(char.name)
+        .build();
+
+    match sqlx::query(&query).execute(&db).await {
+        Ok(_) => Ok(StatusCode::CREATED),
+        Err(err) => {
+            tracing::error!("Database error: {:?}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
-
-    data.insert(character.id, character);
-    Ok(())
 }
 
 pub fn update_new_character(id: u16, updated_character: Character) -> Result<(), StatusCode> {

@@ -11,6 +11,12 @@ pub struct Character {
     pub actor_name: String,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CharacterPayload {
+    pub name: String,
+    pub actor_name: String,
+}
+
 impl std::fmt::Display for Character {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(
