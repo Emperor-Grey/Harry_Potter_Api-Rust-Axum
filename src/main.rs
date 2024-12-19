@@ -1,6 +1,3 @@
-#[allow(unused, dead_code)]
-use std::{net::SocketAddr, time::Duration};
-
 use axum::{routing::get, Router};
 use dotenv::dotenv;
 use handlers::{
@@ -8,6 +5,7 @@ use handlers::{
 };
 use http::Method;
 use std::env;
+use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
