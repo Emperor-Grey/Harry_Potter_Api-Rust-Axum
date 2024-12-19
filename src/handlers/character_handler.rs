@@ -8,10 +8,10 @@ use serde_json::json;
 use sqlx::MySqlPool;
 
 use crate::{
-    models::{character::CharacterPayload, Character},
+    models::character::CharacterPayload,
     services::{
         character_service::{
-            delete_new_character, get_character_by_id_from_db, update_new_character,
+            delete_new_character_from_db, get_character_by_id_from_db, update_new_character_in_db,
         },
         create_new_character_in_db, get_all_characters_from_db,
     },
@@ -115,41 +115,99 @@ pub async fn create_character(
     }
 }
 
+// pub async fn update_character(
+//     Path(id): Path<u16>,
+//     Json(updated_character): Json<Character>,
+// ) -> impl IntoResponse {
+//     tracing::info!("updating a character with ID: {}", id);
+//     match update_new_character(id, updated_character) {
+//         Ok(()) => (
+//             StatusCode::OK,
+//             Json(json!({
+//                 "message": "Character updated successfully"
+//             })),
+//         )
+//             .into_response(),
+//         Err(StatusCode::NOT_FOUND) => (
+//             StatusCode::NOT_FOUND,
+//             Json(json!({
+//                 "message": "Character not found"
+//             })),
+//         )
+//             .into_response(),
+//         Err(_) => (
+//             StatusCode::INTERNAL_SERVER_ERROR,
+//             Json(json!({
+//                 "message": "Internal server error"
+//             })),
+//         )
+//             .into_response(),
+//     }
+// }
+
 pub async fn update_character(
+    State(db): State<MySqlPool>,
     Path(id): Path<u16>,
-    Json(updated_character): Json<Character>,
+    Json(update_char): Json<CharacterPayload>,
 ) -> impl IntoResponse {
-    tracing::info!("updating a character with ID: {}", id);
-    match update_new_character(id, updated_character) {
-        Ok(()) => (
+    tracing::info!("Updating character with id: {}", id);
+    match update_new_character_in_db(State(db), update_char, id).await {
+        Ok(_s) => (
             StatusCode::OK,
             Json(json!({
-                "message": "Character updated successfully"
+                "message": "Character Updated Successfully"
             })),
-        )
-            .into_response(),
+        ),
         Err(StatusCode::NOT_FOUND) => (
             StatusCode::NOT_FOUND,
             Json(json!({
                 "message": "Character not found"
             })),
-        )
-            .into_response(),
+        ),
         Err(_) => (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(json!({
                 "message": "Internal server error"
             })),
-        )
-            .into_response(),
+        ),
     }
 }
 
-pub async fn delete_character(Path(id): Path<u16>) -> impl IntoResponse {
+// pub async fn delete_character(Path(id): Path<u16>) -> impl IntoResponse {
+//     tracing::info!("Deleting a character with ID: {}", id);
+//     match delete_new_character(id) {
+//         Ok(()) => (
+//             StatusCode::NO_CONTENT,
+//             Json(json!({
+//                 "message": "Character deleted successfully"
+//             })),
+//         )
+//             .into_response(),
+//         Err(StatusCode::NOT_FOUND) => (
+//             StatusCode::NOT_FOUND,
+//             Json(json!({
+//                 "message": "Character not found"
+//             })),
+//         )
+//             .into_response(),
+//         Err(_) => (
+//             StatusCode::INTERNAL_SERVER_ERROR,
+//             Json(json!({
+//                 "message": "Internal server error"
+//             })),
+//         )
+//             .into_response(),
+//     }
+// }
+
+pub async fn delete_character(
+    State(db): State<MySqlPool>,
+    Path(id): Path<u16>,
+) -> impl IntoResponse {
     tracing::info!("Deleting a character with ID: {}", id);
-    match delete_new_character(id) {
-        Ok(()) => (
-            StatusCode::NO_CONTENT,
+    match delete_new_character_from_db(State(db), id).await {
+        Ok(_s) => (
+            _s,
             Json(json!({
                 "message": "Character deleted successfully"
             })),

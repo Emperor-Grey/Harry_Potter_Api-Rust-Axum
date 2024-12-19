@@ -1,4 +1,3 @@
-use crate::data::DATA;
 use crate::models::character::{Character, CharacterPayload};
 use axum::extract::State;
 use http::StatusCode;
@@ -87,29 +86,73 @@ pub async fn create_new_character_in_db(
     }
 }
 
-pub fn update_new_character(id: u16, updated_character: Character) -> Result<(), StatusCode> {
-    let mut data = match DATA.lock() {
-        Ok(data) => data,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
-    };
+// pub fn update_new_character(id: u16, updated_character: Character) -> Result<(), StatusCode> {
+//     let mut data = match DATA.lock() {
+//         Ok(data) => data,
+//         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+//     };
 
-    if let Some(existing_character) = data.get_mut(&id) {
-        *existing_character = updated_character;
-        Ok(())
-    } else {
-        Err(StatusCode::NOT_FOUND)
+//     if let Some(existing_character) = data.get_mut(&id) {
+//         *existing_character = updated_character;
+//         Ok(())
+//     } else {
+//         Err(StatusCode::NOT_FOUND)
+//     }
+// }
+
+pub async fn update_new_character_in_db(
+    State(db): State<MySqlPool>,
+    update_character: CharacterPayload,
+    id: u16,
+) -> Result<StatusCode, StatusCode> {
+    let query = Character::update()
+        .update_actor_name_with_value(update_character.actor_name)
+        .update_name_with_value(update_character.name)
+        .update_where_id_eq(id);
+
+    let updated_char = sqlx::query(&query).execute(&db).await;
+
+    match updated_char {
+        Ok(_) => {
+            tracing::info!("Character with ID {} updated successfully", id);
+            Ok(StatusCode::OK)
+        }
+
+        Err(err) => {
+            tracing::error!("Database error during update: {:?}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 
-pub fn delete_new_character(id: u16) -> Result<(), StatusCode> {
-    let mut data = match DATA.lock() {
-        Ok(data) => data,
-        Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
-    };
+// pub fn delete_new_character(id: u16) -> Result<(), StatusCode> {
+//     let mut data = match DATA.lock() {
+//         Ok(data) => data,
+//         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
+//     };
 
-    if data.remove(&id).is_some() {
-        Ok(())
-    } else {
-        Err(StatusCode::NOT_FOUND)
+//     if data.remove(&id).is_some() {
+//         Ok(())
+//     } else {
+//         Err(StatusCode::NOT_FOUND)
+//     }
+// }
+
+pub async fn delete_new_character_from_db(
+    State(db): State<MySqlPool>,
+    id: u16,
+) -> Result<StatusCode, StatusCode> {
+    let query = Character::delete().delete_where_id_eq(id);
+
+    match sqlx::query(&query).execute(&db).await {
+        Ok(_d) => {
+            tracing::info!("Character with ID {} successfully deleted", id);
+            Ok(StatusCode::OK)
+        }
+
+        Err(err) => {
+            tracing::error!("Database error during update: {:?}", err);
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }

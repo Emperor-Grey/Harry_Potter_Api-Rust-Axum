@@ -10,7 +10,7 @@ use tokio::net::TcpListener;
 use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-pub mod data;
+pub mod dummy_data;
 
 pub mod database;
 pub mod handlers;
