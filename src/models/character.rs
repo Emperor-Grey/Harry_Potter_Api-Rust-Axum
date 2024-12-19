@@ -1,6 +1,10 @@
+use prkorm::Table;
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 
-#[derive(Hash, PartialEq, Eq, Clone, Debug, Deserialize, Serialize, Default)]
+#[derive(Table, Debug, Serialize, Deserialize, Clone, Default, Hash, PartialEq, Eq, FromRow)]
+#[table_name("`characters`")]
+#[primary_key("id")]
 pub struct Character {
     pub id: u16,
     pub name: String,

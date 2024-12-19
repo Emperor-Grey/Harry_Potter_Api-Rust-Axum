@@ -1,5 +1,5 @@
 pub mod character_handler;
 
 pub use character_handler::{
-    create_character, delete_character, get_characters, get_characters_by_id, update_character,
+    create_character, delete_character, get_character_by_id, get_characters, update_character,
 };
