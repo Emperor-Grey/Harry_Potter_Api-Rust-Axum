@@ -61,7 +61,7 @@ async fn main() {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let listener = TcpListener::bind(addr).await.unwrap();
 
-    tracing::debug!("listening on {}", listener.local_addr().unwrap());
+    tracing::debug!("listening on https://{}", listener.local_addr().unwrap());
 
     axum::serve(
         listener,
